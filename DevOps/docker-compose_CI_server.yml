@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  ci_server:
+    build:
+      context: ~/
+      dockerfile: ./Gan-Shmuel/DevOps/Dockerfile_CI_server
+    privileged: true
+    ports:
+      - "8090:5000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+#      - /home/ubuntu/.ssh/bootcamp:/root/.ssh/bootcamp
+#      - /home/ubuntu/.ssh/config:/root/.ssh/config
+    networks:
+      - production-network
+
+networks:
+  production-network:
+    driver: bridge
+
+

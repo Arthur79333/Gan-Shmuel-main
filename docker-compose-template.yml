@@ -1,0 +1,65 @@
+version: '3'
+services:
+  ${BILLING_SERVICE}:
+    build: ./BillService/.
+    ports:
+      - "${BILLING_PORT}:5000"
+    environment:
+      - DATABASE_URL=mysql+pymysql://ganshmuel:1234@${BILLING_DB}/billdb
+    networks:
+      - ${GAN_SHMUEL_NETWORK}
+    depends_on:
+      - ${BILLING_DB}
+    command: sh -c "sleep 20 && python server.py"
+    restart: on-failure
+  ${BILLING_DB}:
+    image: mysql:5.7
+    platform: linux/amd64
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: billdb
+      MYSQL_USER: ganshmuel
+      MYSQL_PASSWORD: 1234
+    networks:
+      - ${GAN_SHMUEL_NETWORK}
+    volumes:
+      - ${BILLING_DB_VOLUME}:/var/lib/mysql
+      - ./BillService/billingdb.sql:/docker-entrypoint-initdb.d/billingdb.sql
+  ${WEIGHT_SERVICE}:
+    build: ./WeightService/.
+    ports:
+      - "${WEIGHT_PORT}:5000"
+    environment:
+      - DATABASE_URL=mysql+pymysql://ganshmuel:1234@${WEIGHT_DB}/weight
+    networks:
+      - ${GAN_SHMUEL_NETWORK}
+    depends_on:
+      - ${WEIGHT_DB}
+    command: sh -c "sleep 20 && python weight-app.py"
+  ${WEIGHT_DB}:
+    image: mysql:5.7
+    platform: linux/amd64
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: weight
+      MYSQL_USER: ganshmuel
+      MYSQL_PASSWORD: 1234
+    networks:
+      - ${GAN_SHMUEL_NETWORK}
+    volumes:
+      - ${WEIGHT_DB_VOLUME}:/var/lib/mysql
+      - ./WeightService/weightdb.sql:/docker-entrypoint-initdb.d/weightdb.sql
+  ${DEVOPS_SERVICE}:
+    build: ./DevOps/.
+    networks:
+      - ${GAN_SHMUEL_NETWORK}
+    ports:
+      - "${DEVOPS_PORT}:5000"
+    command: sh -c "python app.py"
+networks:
+  ${GAN_SHMUEL_NETWORK}:
+    driver: bridge
+volumes:
+  ${BILLING_DB_VOLUME}:
+  ${WEIGHT_DB_VOLUME}:
+  

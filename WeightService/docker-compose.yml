@@ -1,0 +1,34 @@
+version: '3'
+
+services:
+  server:
+    build: .
+    ports:
+      - "8081:5000"
+    environment:
+      - DATABASE_URL=mysql+pymysql://ganshmuel:1234@mysql/weight
+    volumes:
+      - ./in:/in
+    depends_on:
+      - mysql
+    command: sh -c "sleep 20 && python weight-app.py"
+
+  mysql:
+    image: mysql:5.7
+    platform: linux/amd64
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: weight
+      MYSQL_USER: ganshmuel
+      MYSQL_PASSWORD: 1234
+    volumes:
+      - ./weightdb.sql:/docker-entrypoint-initdb.d/weightdb.sql  # Mount the SQL file
+      - ./db:/var/lib/mysql  # Map MySQL data to local folder
+
+    command: --init-file=/docker-entrypoint-initdb.d/weightdb.sql  # Specify init file
+
+networks:
+  default:
+
+volumes:
+  mysql-data:

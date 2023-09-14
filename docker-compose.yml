@@ -1,0 +1,65 @@
+version: '3'
+services:
+  billing_server:
+    build: ./BillService/.
+    ports:
+      - "8080:5000"
+    environment:
+      - DATABASE_URL=mysql+pymysql://ganshmuel:1234@billing_mysql/billdb
+    networks:
+      - production_network
+    depends_on:
+      - billing_mysql
+    command: sh -c "sleep 20 && python server.py"
+    restart: on-failure
+  billing_mysql:
+    image: mysql:5.7
+    platform: linux/amd64
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: billdb
+      MYSQL_USER: ganshmuel
+      MYSQL_PASSWORD: 1234
+    networks:
+      - production_network
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./BillService/billingdb.sql:/docker-entrypoint-initdb.d/billingdb.sql
+  weight_server:
+    build: ./WeightService/.
+    ports:
+      - "8081:5000"
+    environment:
+      - DATABASE_URL=mysql+pymysql://ganshmuel:1234@weight_mysql/weight
+    networks:
+      - production_network
+    depends_on:
+      - weight_mysql
+    command: sh -c "sleep 20 && python weight-app.py"
+  weight_mysql:
+    image: mysql:5.7
+    platform: linux/amd64
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: weight
+      MYSQL_USER: ganshmuel
+      MYSQL_PASSWORD: 1234
+    networks:
+      - production_network
+    volumes:
+      - mysql-data-weight:/var/lib/mysql
+      - ./WeightService/weightdb.sql:/docker-entrypoint-initdb.d/weightdb.sql
+  devops_ci_server:
+    build: ./DevOps/.
+    networks:
+      - production_network
+    ports:
+      - "8082:5000"
+    command: sh -c "python app.py"
+networks:
+  production_network:
+    driver: bridge
+volumes:
+  mysql-data:
+  mysql-data-weight:
+  

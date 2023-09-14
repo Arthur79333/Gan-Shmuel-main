@@ -1,0 +1,50 @@
+FROM ubuntu:22.04
+#Install docker and docker-compose with their dependencies
+# RUN apt-get update
+# RUN apt install curl -y
+RUN apt-get update
+RUN apt-get install ca-certificates curl gnupg -y
+RUN install -m 0755 -d /etc/apt/keyrings
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+RUN chmod a+r /etc/apt/keyrings/docker.gpg
+RUN echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+RUN apt-get update
+RUN apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
+RUN curl -SL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+RUN ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+RUN chmod +x /usr/local/bin/docker-compose
+# Install python, pip  with their dependencies
+RUN apt install software-properties-common -y
+RUN add-apt-repository ppa:deadsnakes/ppa
+RUN apt update
+RUN apt install python3 python3-pip -y
+
+
+# Create and set the working directory
+WORKDIR /root/.ssh
+
+# Add github key
+# **** following line is to test locally, can be removed after we have successful working CI Server ****
+# COPY config Develeap_Bootcamp2 Develeap_Bootcamp2.pub .
+COPY ./.ssh/config ./.ssh/bootcamp .
+# [TO-DO] add key with secret ENV
+# Create known_hosts
+RUN touch /root/.ssh/known_hosts
+# Add github key
+RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
+# Create and set the working directory
+WORKDIR /root/home
+# Clone repo
+# RUN GIT_SSH_COMMAND="ssh -i ~/.ssh/Develeap_Bootcamp2" git clone git@github.com:Blue-Team-Develeap/Gan-Shmuel.git
+RUN git clone git@github.com:Blue-Team-Develeap/Gan-Shmuel.git
+
+# COPY .env files
+COPY ./Gan-Shmuel/.env-prod ./Gan-Shmuel/.env-test ~/Gan-Shmuel/
+
+WORKDIR /root/home/Gan-Shmuel/DevOps
+RUN pip install -r requirements.txt
+# DOCUMENT EXPOSURE OF PORT 5000
+EXPOSE 5000
+# Run app.py when the container launches
+# ENTRYPOINT [ "python3", "app.py" ]
+CMD bash

@@ -1,0 +1,5 @@
+# Ignore lior's venv
+weight_app_venv/
+.DS_Store
+gan-shmuel
+__pycache__
